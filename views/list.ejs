@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
-    <title>To Do List</title>
-</head>
-<body>
+<%- include("header") %> 
     <div class = "box" id="heading">
-        <h1><%= htmlDay %> </h1>
+        <h1><%= htmlListTitle %> </h1>
     </div>
     <div class="box">
         <% htmlTodoList.forEach(element => { %>
@@ -19,9 +11,8 @@
         <% }) %>
     
     <form action="/" method="post">
-        <input type="text" name="newTodo" placeholder="Enter new Todo.." autocomplete="off">
-        <button type="submit">+</button>
+        <input type="text" name="newTodo" placeholder="Enter a new Todo.." autocomplete="off">
+        <button type="submit" name="addTodobutton" value=<%= htmlListTitle %>  >+</button>
     </form>
 </div>
-</body>
-</html> 
+<%- include("footer")  %> 
