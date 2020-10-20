@@ -9,8 +9,10 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
 
+// mongoDB Url
+const dbConnectionUrl = 'mongodb://localhost:27017/ejsTodoListDB';
 // mongoose connection
-mongoose.connect('mongodb://localhost:27017/ejsTodoListDB', {useNewUrlParser:true,useUnifiedTopology:true});
+mongoose.connect(dbConnectionUrl, {useNewUrlParser:true,useUnifiedTopology:true});
 
 // db collection schema
 const itemSchema = {
@@ -64,16 +66,22 @@ app.get("/",(req,res)=>{
 
 app.post("/",(req,res)=>{
 	// console.log(req.body);	
-	const newTodoItem = req.body.newTodo;
+	const newTodo = req.body.newTodo;
+	// push new todo into db
+	// create new todo item document
+	const newTodoItem = new TodoItem({ todoThing :newTodo });
+	// save the document
+	newTodoItem.save();
+	res.redirect("/");
 
-	if(req.body.addTodobutton==='Work'){
-		workTodoList.push(newTodoItem);
-		res.redirect("/work");
-	}
-	else{		
-		todoList.push(newTodoItem);
-		res.redirect("/");
-	}
+	// if(req.body.addTodobutton==='Work'){
+	// 	workTodoList.push(newTodoItem);
+	// 	res.redirect("/work");
+	// }
+	// else{		
+	// 	todoList.push(newTodoItem);
+	// 	res.redirect("/");
+	// }
 });
 
 // work route
