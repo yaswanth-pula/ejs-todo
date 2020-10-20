@@ -4,13 +4,15 @@
     </div>
     <div class="box">
         <% htmlTodoList.forEach(element => { %>
+        <form action="/delete" method="POST">
             <div class="item">
-            <input type="checkbox">
-            <p><%= element.todoThing %> </p>
-        </div>
+                <input type="checkbox" name="checkBox" value="<%= element._id %>" onchange="this.form.submit()">
+                <p><%= element.todoThing %> </p>
+            </div>
+        </form>
         <% }) %>
     
-    <form action="/" method="post">
+    <form class="item" action="/" method="post">
         <input type="text" name="newTodo" placeholder="Enter a new Todo.." autocomplete="off">
         <button type="submit" name="addTodobutton" value=<%= htmlListTitle %>  >+</button>
     </form>

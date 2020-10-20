@@ -12,7 +12,7 @@ app.use(express.static("public"));
 // mongoDB Url
 const dbConnectionUrl = 'mongodb://localhost:27017/ejsTodoListDB';
 // mongoose connection
-mongoose.connect(dbConnectionUrl, {useNewUrlParser:true,useUnifiedTopology:true});
+mongoose.connect(dbConnectionUrl, {useNewUrlParser:true,useUnifiedTopology:true, useFindAndModify:false});
 
 // db collection schema
 const itemSchema = {
@@ -82,6 +82,19 @@ app.post("/",(req,res)=>{
 	// 	todoList.push(newTodoItem);
 	// 	res.redirect("/");
 	// }
+});
+// delete route
+app.post("/delete",(req,res)=>{
+	// console.log(req.body.checkBox);
+	const checkedItemId = req.body.checkBox;
+	// first thought of solution
+	// TodoItem.deleteOne({_id:checkedItemId},(err)=>{
+	// 	(err) ? console.log(err) : console.log("delete Success.");
+	// });
+	TodoItem.findByIdAndRemove(checkedItemId, (err) => {
+		(err) ? console.log(err) : console.log("delete Success.");
+	})
+	res.redirect("/");
 });
 
 // work route
