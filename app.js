@@ -1,14 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const _ = require('lodash');
+
+const date = require(__dirname+"/date.js"); 
 
 const app = express();
-let	workTodoList = []; 
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
 
+// Root Route Header
+const day = date.getDay();
 // mongoDB Url
 const dbConnectionUrl = 'mongodb://localhost:27017/ejsTodoListDB';
 // mongoose connection
@@ -20,9 +24,10 @@ const itemSchema = {
 }
 // collection model
 const TodoItem = mongoose.model("TodoItem", itemSchema);
+
 // default todo items
 const TodoItem1 = new TodoItem({
-	todoThing:"Use Todo App"
+	todoThing:"Welcome To Todo App"
 });
 const TodoItem2 = new TodoItem({
 	todoThing:"Star my Github Repo"
@@ -38,12 +43,19 @@ const defaultTodoItems  = [TodoItem1, TodoItem2, TodoItem3];
 // 	err ? console.log(err) : console.log("Insertion Success.");
 // });
 
+// new collection for custom lists
+// custom list schema
+const listSchema = {
+	listName : {type:String, requried:true},
+	items : [itemSchema]
+}
+// custom list model
+const CustomList = mongoose.model("list",listSchema);
+
 // root route
 app.get("/",(req,res)=>{
 	// Todo List Header
-	const date = new Date();
-	const  options = {weekday:'long', day:"numeric", month:"long"};
-	const day = date.toLocaleDateString("en-US",options);
+
 	// Get Todo List items
 	TodoItem.find({},(err,dbResult)=>{
 		 if(dbResult.length === 0){
@@ -67,12 +79,29 @@ app.get("/",(req,res)=>{
 app.post("/",(req,res)=>{
 	// console.log(req.body);	
 	const newTodo = req.body.newTodo;
+	const currentListTitle = req.body.addTodobutton;
 	// push new todo into db
 	// create new todo item document
 	const newTodoItem = new TodoItem({ todoThing :newTodo });
 	// save the document
-	newTodoItem.save();
-	res.redirect("/");
+	if(day === currentListTitle){
+		newTodoItem.save(err =>{
+			if(!err)  res.redirect("/");
+		});	
+	}
+	else{
+		CustomList.findOne({listName:currentListTitle},(err,resultDoc)=>{
+			if(err)
+				console.log(err);
+			else{
+				// console.log(resultDoc);
+				resultDoc.items.push(newTodoItem);
+				resultDoc.save((err)=>{
+					if(!err) res.redirect("/"+currentListTitle);
+				});
+			}
+		});
+	}
 
 	// if(req.body.addTodobutton==='Work'){
 	// 	workTodoList.push(newTodoItem);
@@ -87,19 +116,52 @@ app.post("/",(req,res)=>{
 app.post("/delete",(req,res)=>{
 	// console.log(req.body.checkBox);
 	const checkedItemId = req.body.checkBox;
+	const itemList = req.body.deleteItemListTitle;
 	// first thought of solution
 	// TodoItem.deleteOne({_id:checkedItemId},(err)=>{
 	// 	(err) ? console.log(err) : console.log("delete Success.");
-	// });
-	TodoItem.findByIdAndRemove(checkedItemId, (err) => {
-		(err) ? console.log(err) : console.log("delete Success.");
-	})
-	res.redirect("/");
+	// }); 
+	// console.log(itemList,day,checkedItemId);
+	if(day === itemList){
+		TodoItem.findByIdAndRemove(checkedItemId, (err) => {
+			if(!err){
+				console.log("delete Success.");
+				res.redirect("/");
+			}
+			else{
+				console.log(err);
+			}
+		});
+	}
+	else{
+		CustomList.findOneAndUpdate(
+				{listName:itemList},
+				{$pull:{items:{_id:checkedItemId}}},
+				(err,resultDoc)=>{
+					if(!err) res.redirect("/"+itemList);
+		});
+	}
+
 });
 
-// work route
-app.get("/work",(req,res)=>{
-	res.render("list",{htmlListTitle:"Work List", htmlTodoList:workTodoList});
+// custom route
+app.get("/:customRoute",(req,res)=>{
+	const customListName = _.capitalize(req.params.customRoute);
+	 
+	CustomList.findOne({listName:customListName},(err,resultDoc)=>{
+		if(!err){
+			if( !resultDoc ){ 
+				const newList = new CustomList({ listName: customListName, items:defaultTodoItems });
+				newList.save((err)=>{
+					if(!err) res.redirect("/"+customListName);
+				});
+			}
+			else{
+				res.render("list",{htmlListTitle:resultDoc.listName, htmlTodoList:resultDoc.items});
+			} 
+		}
+	});
+	
 });
 
 // about route
