@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const _ = require('lodash');
 
+const { getDbConnection }  = require('./config');
 const date = require(__dirname+"/date.js"); 
 
 const app = express();
@@ -13,8 +14,10 @@ app.use(express.static("public"));
 
 // Root Route Header
 const day = date.getDay();
+// Database Name
+const databaseName = "ejsTodoListDB";
 // mongoDB Url
-const dbConnectionUrl = 'mongodb://localhost:27017/ejsTodoListDB';
+const dbConnectionUrl = getDbConnection(databaseName);
 // mongoose connection
 mongoose.connect(dbConnectionUrl, {useNewUrlParser:true,useUnifiedTopology:true, useFindAndModify:false});
 
